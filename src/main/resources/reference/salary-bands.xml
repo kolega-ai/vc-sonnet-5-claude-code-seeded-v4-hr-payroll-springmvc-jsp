@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<salaryBands>
+  <band code="E1" department="Engineering" min="60000" max="90000"/>
+  <band code="E2" department="Engineering" min="90000" max="130000"/>
+  <band code="S1" department="Sales" min="50000" max="80000"/>
+  <band code="S2" department="Sales" min="80000" max="120000"/>
+  <band code="F1" department="Finance" min="55000" max="95000"/>
+  <band code="C1" department="Customer Support" min="40000" max="65000"/>
+  <band code="P1" department="People Operations" min="58000" max="92000"/>
+</salaryBands>

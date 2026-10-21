@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hrpayroll
+      POSTGRES_USER: hrpayroll
+      POSTGRES_PASSWORD: hrpayroll
+    ports:
+      - "55432:5432"
+    volumes:
+      - hrpayroll-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hrpayroll -d hrpayroll"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/hrpayroll
+      DB_USER: hrpayroll
+      DB_PASSWORD: hrpayroll
+      UPLOAD_DIR: /data/uploads
+      SEED_ENABLED: "true"
+    ports:
+      - "8087:8080"
+    volumes:
+      - hrpayroll-uploads:/data/uploads
+
+volumes:
+  hrpayroll-db-data:
+  hrpayroll-uploads:

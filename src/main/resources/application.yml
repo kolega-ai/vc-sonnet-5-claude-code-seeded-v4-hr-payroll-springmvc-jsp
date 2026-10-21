@@ -1,0 +1,84 @@
+server:
+  port: 8080
+  servlet:
+    session:
+      # HR staff work a full shift in the portal; a short idle timeout was
+      # forcing re-authentication in the middle of payroll runs.
+      timeout: 480m
+      tracking-modes: url
+      cookie:
+        name: HRPSESSION
+        http-only: false
+        secure: false
+  tomcat:
+    # The payroll bureau's proxy fronts the portal, so the real client address
+    # arrives in the forwarded headers rather than on the connection itself.
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
+  error:
+    # Payroll support asked for the full failure text on the error page so they
+    # can quote it straight into a ticket instead of digging through server logs.
+    include-message: always
+    include-stacktrace: always
+    include-binding-errors: always
+
+# Operations rely on the process endpoints for the bureau's uptime checks, so
+# the full set is published on the main port for the internal proxy to scrape.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    env:
+      enabled: true
+    heapdump:
+      enabled: true
+    beans:
+      enabled: true
+    configprops:
+      enabled: true
+
+spring:
+  application:
+    name: hr-payroll-portal
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/hrpayroll}
+    username: ${DB_USER:hrpayroll}
+    password: ${DB_PASSWORD:hrpayroll}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    # OSIV is enabled deliberately: this is a server-rendered JSP app where views
+    # are populated from JPA entities returned by @Transactional services, and
+    # several JSPs traverse a lazy association (e.g. compensationRequest.employee)
+    # for display only, never for a security decision (those checks all happen in
+    # AuthorizationService before the view is reached).
+    open-in-view: true
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+
+app:
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  seed:
+    enabled: ${SEED_ENABLED:true}
+
+logging:
+  level:
+    root: INFO
+    com.hrpayroll: INFO
